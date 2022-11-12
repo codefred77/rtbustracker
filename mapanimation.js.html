@@ -1,0 +1,129 @@
+
+<script src="http://maps.google.com/maps/api/js?key=AIzaSyAIcPNj-JVR_rt3g2KKYuufV0GUX5y8YKk"></script>
+
+<label for="Route">Enter bus route:</label>
+<input type="number" id="route" name="route" placeholder="Enter route number here">
+<button onclick="checkRouteValidity()">Enter</button>
+
+<div id="map" style="width:1024px; height:768px"></div>
+
+<script>
+
+var map;
+var markers = [];
+var matchFound = false;
+
+// Enter valid routes into this array
+// NOTE: Limiting this to only 2 routes for demonstrations purposes
+var validRoutes = [1, 9];
+
+async function checkRouteValidity () {
+  matchFound = false;
+  let routeInput = await document.getElementById('route').value;
+
+
+  for (let i=0; i<validRoutes.length; i++) {
+
+    // Make sure the route is valid
+    if (validRoutes[i] == routeInput) {
+      console.log ("routeInput:" + routeInput);
+      console.log ("Route number from array: " + toString(validRoutes[i]));
+      matchFound = true;
+    }
+
+  }
+
+  // If route is valid proceed with mapping, else display an alert
+  if (matchFound==true)
+    init();
+  else 
+    alert ("Invalid Route Number");
+}
+
+// load map
+function init(){
+	var myOptions = {
+		zoom      : 12,
+		center    : { lat:42.353350,lng:-71.091525},
+		mapTypeId : google.maps.MapTypeId.ROADMAP
+	};
+	var element = document.getElementById('map');
+  	map = new google.maps.Map(element, myOptions);
+  	addMarkers();
+}
+
+// Add bus markers to map
+async function addMarkers(){
+	// get bus data
+	var locations = await getBusLocations();
+
+	// loop through data, add bus markers
+	locations.forEach(function(bus){
+		var marker = getMarker(bus.id);		
+		if (marker){
+			moveMarker(marker,bus);
+		}
+		else{
+			addMarker(bus);			
+		}
+	});
+
+	// timer
+	console.log(new Date());
+	setTimeout(addMarkers,15000);
+}
+
+// Request bus data from MBTA
+async function getBusLocations(){
+  var busRoute = document.getElementById('route').value;
+	var url = 'https://api-v3.mbta.com/vehicles?api_key=ca34f7b7ac8a445287cab52fb451030a&filter[route]=' + busRoute + '&include=trip';	
+	var response = await fetch(url);
+	var json     = await response.json();
+	return json.data;
+}
+
+function addMarker(bus){
+	var icon = getIcon(bus);
+	var marker = new google.maps.Marker({
+	    position: {
+	    	lat: bus.attributes.latitude, 
+	    	lng: bus.attributes.longitude
+	    },
+	    map: map,
+	    icon: icon,
+	    id: bus.id
+	});
+	markers.push(marker);
+}
+
+function getIcon(bus){
+	// select icon based on bus direction
+	if (bus.attributes.direction_id === 0) {
+		return 'red.png';
+	}
+	return 'blue.png';	
+}
+
+function moveMarker(marker,bus) {
+	// change icon if bus has changed direction
+	var icon = getIcon(bus);
+	marker.setIcon(icon);
+
+	// move icon to new lat/lon
+    marker.setPosition( {
+    	lat: bus.attributes.latitude, 
+    	lng: bus.attributes.longitude
+	});
+}
+
+function getMarker(id){
+	var marker = markers.find(function(item){
+		return item.id === id;
+	});
+	return marker;
+}
+
+//window.onload = init;
+
+
+</script>

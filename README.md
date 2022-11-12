@@ -23,7 +23,7 @@ To run:
     <script src="http://maps.google.com/maps/api/js?REPLACE_WITH_YOUR_KEY"></script>
 
 3. Load the index.html file into your browser
-4. Enter the route you want to track (form demonstartion purposes only routes 1 and 9 are valid)
+4. Enter the route you want to track (for demonstartion purposes only routes 1 and 9 are valid)
 5. Hit the "Enter" button
 
 
